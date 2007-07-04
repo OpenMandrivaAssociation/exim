@@ -47,7 +47,7 @@
 Summary:		The exim mail transfer agent
 Name:			%{name}
 Version:		%{version}
-Release:		%mkrel 8
+Release:		%mkrel 9
 License:		GPL
 Group:			System/Servers
 URL:			http://www.exim.org
@@ -304,10 +304,10 @@ bzcat %{SOURCE31} > exim_tmp/exim_cron_exicyclog_eximstats
 bzcat %{SOURCE32} > exim_tmp/exim_sysconfig
 
 %build
-
+%serverbuild
 make \
-	CFLAGS="%{optflags} -fPIC" \
-	RPM_OPT_FLAGS="%{optflags} -fPIC"
+	CFLAGS="$RPM_OPT_FLAGS -fPIC" \
+	RPM_OPT_FLAGS="$RPM_OPT_FLAGS -fPIC"
 
 # build SA-exim
 pushd sa-exim-%{saversion}
@@ -316,7 +316,7 @@ perl -pi -e 's|/usr/lib/exim4/local_scan|%{_libdir}/exim|g' INSTALL
 make clean
 make \
 	SACONF=%{_sysconfdir}/exim/sa-exim.conf \
-	CFLAGS="%{optflags}" \
+	CFLAGS="$RPM_OPT_FLAGS" \
 	LDFLAGS="-shared -fPIC"
 popd
 
