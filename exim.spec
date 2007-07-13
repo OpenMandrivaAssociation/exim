@@ -47,7 +47,7 @@
 Summary:		The exim mail transfer agent
 Name:			%{name}
 Version:		%{version}
-Release:		%mkrel 9
+Release:		%mkrel 10
 License:		GPL
 Group:			System/Servers
 URL:			http://www.exim.org
@@ -121,7 +121,6 @@ BuildRequires:		srs_alt-devel
 %endif
 %if %{build_sqlite3}
 BuildRequires:		sqlite3-devel >= 3.2.2
-Requires:		libsqlite3_0 >= 3.2.2
 %endif
 %if %{build_ldap}
 BuildRequires:		openldap-devel >= 2.0.11
@@ -161,7 +160,7 @@ You can build %{name} with some conditional build swithes;
 %package		monitor
 Summary:		X11 monitor application for exim
 Group:			Monitoring
-Requires:		%{name}, x11
+Requires:		%{name}
 
 %description		monitor
 The Exim Monitor is an optional supplement to the Exim package. It
@@ -432,18 +431,6 @@ install -m0644 exim_monitor-48x48.png %{buildroot}%{_liconsdir}/%{name}-monitor.
 install -m0644 exim_monitor-32x32.png %{buildroot}%{_iconsdir}/%{name}-monitor.png
 install -m0644 exim_monitor-16x16.png %{buildroot}%{_miconsdir}/%{name}-monitor.png
 
-# Mandriva Menus
-cat > %{buildroot}%{_menudir}/%{name}-monitor <<EOF
-?package(%{name}-monitor): \
- command="%{_bindir}/eximon" \
- title="Exim Monitor" \
- longtitle="X11 monitor application for exim" \
- needs="x11" \
- icon="%{name}-monitor.png" \
- section="System/Configuration/Networking" \
- xdg="true"
-EOF
-
 #menu-xdg
 mkdir -p %{buildroot}%{_datadir}/applications
 cat > %{buildroot}%{_datadir}/applications/mandriva-%{name}-monitor.desktop << EOXDG
@@ -624,7 +611,6 @@ fi
 %defattr(-,root,root)
 %attr(0755,root,root) %{_bindir}/eximon
 %attr(0755,root,root) %{_bindir}/eximon.bin
-%{_menudir}/%{name}-monitor
 %{_iconsdir}/%{name}-monitor.png
 %{_miconsdir}/%{name}-monitor.png
 %{_liconsdir}/%{name}-monitor.png
