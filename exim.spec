@@ -47,7 +47,7 @@
 Summary:		The exim mail transfer agent
 Name:			%{name}
 Version:		%{version}
-Release:		%mkrel 10
+Release:		%mkrel 11
 License:		GPL
 Group:			System/Servers
 URL:			http://www.exim.org
@@ -87,6 +87,7 @@ Patch7:			exim-4.63-configure.default.patch
 # http://www.exim.org/bugzilla/attachment.cgi?id=78&action=view
 Patch8:			exim-4.66-openssl.patch
 Requires(pre):		rpm-helper
+Requires:		perl(Net::IMAP::Simple)
 Requires:		openssl
 Provides:		mail-server sendmail-command 
 BuildRequires:		tcp_wrappers-devel
