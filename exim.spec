@@ -47,8 +47,8 @@
 Summary:		The exim mail transfer agent
 Name:			%{name}
 Version:		%{version}
-Release:		%mkrel 11
-License:		GPL
+Release:		%mkrel 12
+License:		GPLv2+
 Group:			System/Servers
 URL:			http://www.exim.org
 Source0:		ftp://ftp.exim.org/pub/exim/exim4/%{name}-%{version}.tar.bz2
@@ -436,13 +436,13 @@ install -m0644 exim_monitor-16x16.png %{buildroot}%{_miconsdir}/%{name}-monitor.
 mkdir -p %{buildroot}%{_datadir}/applications
 cat > %{buildroot}%{_datadir}/applications/mandriva-%{name}-monitor.desktop << EOXDG
 [Desktop Entry]
-Name="Exim Monitor"
-Comment="X11 monitor application for exim"
+Name=Exim Monitor
+Comment=X11 monitor application for exim
 Exec=%{_bindir}/eximon
 Icon=%{name}-monitor
 Terminal=false
 Type=Application
-Categories=X-MandrivaLinux-System-Configuration-Networking;Settings;Network;
+Categories=Settings;Network;
 EOXDG
 
 %endif
