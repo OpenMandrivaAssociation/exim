@@ -131,6 +131,7 @@ Requires:		openldap >= 2.0.11
 BuildRequires:		libsasl-devel >= 2.0
 %endif
 
+BuildRoot:		%{_tmppath}/%{name}-%{version}
 
 %description
 Exim is a mail transport agent (MTA) developed at the University of
