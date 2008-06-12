@@ -532,11 +532,15 @@ if [ "$1" -ge "1" ]; then
 fi
 
 %if %{build_monitor}
+%if %mdkversion < 200900
 %post monitor
 %update_menus
+%endif
 
+%if %mdkversion < 200900
 %postun monitor
 %clean_menus
+%endif
 %endif
 
 %clean
