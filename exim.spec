@@ -1,23 +1,23 @@
-%define name exim
-%define version 4.63
-%define saversion 4.2.1
+%define name		exim
+%define version		4.69
+%define saversion 	4.2.1
 
-%define tlsdir %{_sysconfdir}/pki/tls/%{name}
-%define tlsdir_old %{_sysconfdir}/ssl/%{name}
+%define tlsdir		%{_sysconfdir}/pki/tls/%{name}
+%define tlsdir_old	%{_sysconfdir}/ssl/%{name}
 
-%define build_mysql 1
-%define build_pgsql 0
-%define build_monitor 1
-%define build_exiscan 1
-%define build_spf2 0
-%define build_srs_alt 0
-%define build_sqlite3 1
-%define build_ldap 1
-%define build_sasl2 1
-%define build_logrotate 1
+%define build_mysql	1
+%define build_pgsql	0
+%define build_monitor	1
+%define build_exiscan	1
+%define build_spf2	0
+%define build_srs_alt	0
+%define build_sqlite3	1
+%define build_ldap	1
+%define build_sasl2	1
+%define build_logrotate	1
 
-%define build_certs 1
-%define altpriority  40
+%define build_certs	1
+%define altpriority 	40
 
 # commandline overrides:
 # rpm -ba|--rebuild --define 'with_xxx'
@@ -47,12 +47,12 @@
 Summary:		The exim mail transfer agent
 Name:			%{name}
 Version:		%{version}
-Release:		%mkrel 16
+Release:		%mkrel 1
 License:		GPLv2+
 Group:			System/Servers
 URL:			http://www.exim.org
 Source0:		ftp://ftp.exim.org/pub/exim/exim4/%{name}-%{version}.tar.bz2
-Source1:		ftp://ftp.exim.org/pub/exim/exim4/%{name}-%{version}.tar.bz2.sig
+Source1:		ftp://ftp.exim.org/pub/exim/exim4/%{name}-%{version}.tar.bz2.asc
 # http://www.exim.org/pub/exim/exim4/config.samples.tar.bz2
 Source2:		exim-4.43-config.samples.tar.bz2
 Source3:		ftp://ftp.exim.org/pub/exim/exim4/exim-texinfo-%{version}.tar.bz2
@@ -62,34 +62,37 @@ Source5:		http://prdownloads.sourceforge.net/sa-exim/sa-exim-%{saversion}.tar.gz
 #Source6:		eximconfig.bz2
 Source7:		exim-README.urpmi
 
-Source20:		exim.aliases.bz2
-Source21:		exim.init.bz2
-Source22:		exim.sysconfig.bz2
-Source23:		exim.logrotate.bz2
-Source24:		exim.pam.bz2
+Source20:		exim.aliases
+Source21:		exim.init
+Source22:		exim.sysconfig
+Source23:		exim.logrotate
+Source24:		exim.pam
 Source25:		exim_monitor-16x16.png
 Source26:		exim_monitor-32x32.png
 Source27:		exim_monitor-48x48.png
-Source28:		exim-4.63-auth_pop3_imap.embedded_perl.bz2
-Source29:		exim-4.63-sasl2_smtpd.conf.bz2
-Source30:		exim-4.63-logrotate_eximstats.bz2
-Source31:		exim-4.63-cron_exicyclog_eximstats.bz2
-Source32:		exim-4.63-sysconfig.bz2
+Source28:		exim-4.63-auth_pop3_imap.embedded_perl
+Source29:		exim-4.63-sasl2_smtpd.conf
+Source30:		exim-4.63-logrotate_eximstats
+Source31:		exim-4.63-cron_exicyclog_eximstats
+Source32:		exim-4.63-sysconfig
 
-Patch0:			exim-4.61-sd3l_config.diff
-#Patch2:			exim-4.33-cyrus.patch.bz2
+Patch0:			exim-4.69-mdv-config.patch
 Patch3:			exim-4.22-install.patch
 Patch4:			exim-4.60-system_pcre-sd3l.diff
 Patch5:			exim-4.43-dontoverridecflags.diff
-# apply the exim acl.c patch - only exim-4.61.1:
-#Patch6:			exim-4.61-acl.diff.bz2
 Patch7:			exim-4.63-configure.default.patch
-# http://www.exim.org/bugzilla/attachment.cgi?id=78&action=view
-Patch8:			exim-4.66-openssl.patch
+
 Requires(pre):		rpm-helper
 Requires:		perl(Net::IMAP::Simple)
 Requires:		openssl
-Provides:		mail-server sendmail-command 
+
+Provides:		mail-server
+Provides:		sendmail-command 
+
+Conflicts:		postfix
+Conflicts:		sendmail
+Conflicts:		qmail
+
 BuildRequires:		tcp_wrappers-devel
 BuildRequires:		pam-devel
 BuildRequires:		openssl-devel
@@ -102,11 +105,7 @@ BuildRequires:		pcre-devel
 BuildRequires:		perl-devel
 BuildRequires:		db-devel >= 4.2
 %if %{build_monitor}
-	%if %mdkversion >= 20070
 BuildRequires:		X11-devel
-	%else
-BuildRequires:		libxorg-x11-devel
-	%endif
 %endif
 %if %{build_mysql}
 BuildRequires:		mysql-devel
@@ -186,8 +185,8 @@ Group:			System/Servers
 %description		doc
 This package includes the Exim FAQ and Exim manual in HTML.
 
-%prep
 
+%prep
 %setup -q -n %{name}-%{version} -a2 -a3 -a4 -a5
 cp %{SOURCE7}		README.urpmi
 
@@ -202,15 +201,10 @@ for i in `find . -type d -name CVS` `find . -type f -name .cvs\*` `find . -type 
 done
 
 %patch0 -p1 -b .config
-#%patch2 -p1 -b .cyrus
 %patch3 -p1 -b .install
 %patch4 -p1 -b .pcre
 %patch5 -p0 -b .dontoverridecflags
-# apply the exim acl.c patch - only exim-4.61.1:
-#%patch6 -p1 -b .acl
 %patch7 -p1 -b .configure_default
-
-%patch8 -p1 -b .openssl098
 
 # apply the SA-exim dlopen patch
 cat sa-exim-%{saversion}/localscan_dlopen_exim_4.20_or_better.patch | patch -p1
@@ -283,12 +277,12 @@ perl -pi -e 's|-L/usr/openssl/lib -lssl -lcrypto|-L/usr/include/openssl -lssl -l
 
 # unpack some other stuff
 mkdir -p mandriva
-#bzcat %{SOURCE6} > mandriva/eximconfig
-bzcat %{SOURCE20} > mandriva/exim.aliases
-bzcat %{SOURCE21} > mandriva/exim.init
-bzcat %{SOURCE22} > mandriva/exim.sysconfig
-bzcat %{SOURCE23} > mandriva/exim.logrotate
-bzcat %{SOURCE24} > mandriva/exim.pam
+#cp %{SOURCE6} mandriva/eximconfig
+cp %{SOURCE20} mandriva/exim.aliases
+cp %{SOURCE21} mandriva/exim.init
+cp %{SOURCE22} mandriva/exim.sysconfig
+cp %{SOURCE23} mandriva/exim.logrotate
+cp %{SOURCE24} mandriva/exim.pam
 
 # copy icons
 cp %{SOURCE25} exim_monitor-16x16.png
@@ -297,11 +291,12 @@ cp %{SOURCE27} exim_monitor-48x48.png
 
 mkdir -p exim_tmp
 # embedded perl
-bzcat %{SOURCE28} > exim_tmp/exim_auth_pop3_imap.embedded_perl
-bzcat %{SOURCE29} > exim_tmp/exim_sasl2_smtpd.conf
-bzcat %{SOURCE30} > exim_tmp/exim_logrotate_eximstats
-bzcat %{SOURCE31} > exim_tmp/exim_cron_exicyclog_eximstats
-bzcat %{SOURCE32} > exim_tmp/exim_sysconfig
+cp -f %{SOURCE28} exim_tmp/exim_auth_pop3_imap.embedded_perl
+cp -f %{SOURCE29} exim_tmp/exim_sasl2_smtpd.conf
+cp -f %{SOURCE30} exim_tmp/exim_logrotate_eximstats
+cp -f %{SOURCE31} exim_tmp/exim_cron_exicyclog_eximstats
+cp -f %{SOURCE32} exim_tmp/exim_sysconfig
+
 
 %build
 %serverbuild
@@ -329,6 +324,7 @@ texi2html --split=chapter -subdir=doc/html/filter doc/texinfo/filter.texinfo
 texi2html --split=chapter -subdir=doc/html/spec doc/texinfo/spec.texinfo
 #texi2pdf --clean --quiet doc/texinfo/filter.texinfo --output=doc/pdf/filter.pdf
 #texi2pdf --clean --quiet doc/texinfo/spec.texinfo --output=doc/pdf/spec.pdf
+
 
 %install
 [ -n "%{buildroot}" -a "%{buildroot}" != / ] && rm -rf %{buildroot}
@@ -457,6 +453,7 @@ cp doc/README README.doc
 # cleanup
 rm -f %{buildroot}%{_bindir}/exim-%{version}*
 
+
 %post
 %_post_service exim
 %{alternatives_install_cmd}
@@ -543,8 +540,10 @@ fi
 %endif
 %endif
 
+
 %clean
 [ -n "%{buildroot}" -a "%{buildroot}" != / ] && rm -rf %{buildroot}
+
 
 %files
 %defattr(-,root,root)
