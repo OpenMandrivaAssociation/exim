@@ -42,7 +42,7 @@
 %{?_with_logrotate: %{expand: %%global build_logrotate 1}}
 %{?_without_logrotate: %{expand: %%global build_logrotate 0}}
 
-%define alternatives_install_cmd update-alternatives --install %{_sbindir}/sendmail mta %{_sbindir}/sendmail.exim %{altpriority} --slave %{_libdir}/sendmail mta-in_libdir %{_sbindir}/sendmail.exim --slave %{_bindir}/mailq mta-mailq %{_bindir}/mailq.exim --slave %{_bindir}/newaliases mta-newaliases %{_bindir}/newaliases.exim --slave %{_bindir}/rmail mta-rmail %{_bindir}/rmail.exim --slave %{_sysconfdir}/aliases mta-etc_aliases %{_sysconfdir}/exim/aliases
+%define alternatives_install_cmd update-alternatives --install %{_sbindir}/sendmail mta %{_sbindir}/sendmail.exim %{altpriority} --slave %{_prefix}/lib/sendmail mta-in_libdir %{_sbindir}/sendmail.exim --slave %{_bindir}/mailq mta-mailq %{_bindir}/mailq.exim --slave %{_bindir}/newaliases mta-newaliases %{_bindir}/newaliases.exim --slave %{_bindir}/rmail mta-rmail %{_bindir}/rmail.exim --slave %{_sysconfdir}/aliases mta-etc_aliases %{_sysconfdir}/exim/aliases
 
 Summary:		The exim mail transfer agent
 Name:			%{name}
@@ -366,7 +366,7 @@ pushd build-`scripts/os-type`-`scripts/arch-type`
 popd
 
 # make some softlinks
-ln -snf ../bin/exim %{buildroot}%{_libdir}/sendmail.exim
+ln -snf ../bin/exim %{buildroot}%{_prefix}/lib/sendmail.exim
 ln -snf ../bin/exim %{buildroot}%{_sbindir}/exim
 ln -snf exim %{buildroot}%{_sbindir}/sendmail.exim
 ln -snf exim %{buildroot}%{_bindir}/mailq.exim
@@ -595,7 +595,7 @@ fi
 #%attr(0755,root,root) %{_sbindir}/eximconfig
 # alternatives
 %attr(0755,root,root) %{_sbindir}/sendmail.exim
-%attr(0644,root,root) %{_libdir}/sendmail.exim
+%attr(0644,root,root) %{_prefix}/lib/sendmail.exim
 %attr(0755,root,root) %{_bindir}/mailq.exim
 %attr(0755,root,root) %{_bindir}/newaliases.exim
 %attr(0755,root,root) %{_bindir}/rmail.exim
