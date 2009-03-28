@@ -80,7 +80,7 @@ Patch0:			exim-4.69-mdv-config.patch
 Patch3:			exim-4.22-install.patch
 Patch4:			exim-4.60-system_pcre-sd3l.diff
 Patch5:			exim-4.43-dontoverridecflags.diff
-Patch7:			exim-4.63-configure.default.patch
+Patch7:			exim-4.69-configure.default.patch
 
 Requires(pre):		rpm-helper
 Requires:		perl(Net::IMAP::Simple)
@@ -296,7 +296,6 @@ cp -f %{SOURCE29} exim_tmp/exim_sasl2_smtpd.conf
 cp -f %{SOURCE30} exim_tmp/exim_logrotate_eximstats
 cp -f %{SOURCE31} exim_tmp/exim_cron_exicyclog_eximstats
 cp -f %{SOURCE32} exim_tmp/exim_sysconfig
-
 
 %build
 %serverbuild
