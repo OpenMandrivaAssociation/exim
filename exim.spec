@@ -81,6 +81,7 @@ Patch3:			exim-4.22-install.patch
 Patch4:			exim-4.60-system_pcre-sd3l.diff
 Patch5:			exim-4.43-dontoverridecflags.diff
 Patch7:			exim-4.69-configure.default.patch
+Patch8:			sa-exim-4.2.1-fix-str-fmt.patch
 
 Requires(pre):		rpm-helper
 Requires:		perl(Net::IMAP::Simple)
@@ -208,6 +209,10 @@ done
 
 # apply the SA-exim dlopen patch
 cat sa-exim-%{saversion}/localscan_dlopen_exim_4.20_or_better.patch | patch -p1
+
+pushd sa-exim-%{saversion}
+%patch8 -p0 -b .str
+popd
 
 # pre-build setup
 cp src/EDITME Local/Makefile
