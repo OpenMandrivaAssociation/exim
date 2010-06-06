@@ -1,5 +1,5 @@
 %define name		exim
-%define version		4.69
+%define version		4.72
 %define saversion 	4.2.1
 
 %define tlsdir		%{_sysconfdir}/pki/tls/%{name}
@@ -47,7 +47,7 @@
 Summary:		The exim mail transfer agent
 Name:			%{name}
 Version:		%{version}
-Release:		%mkrel 7
+Release:		%mkrel 1
 License:		GPLv2+
 Group:			System/Servers
 URL:			http://www.exim.org
@@ -55,7 +55,7 @@ Source0:		ftp://ftp.exim.org/pub/exim/exim4/%{name}-%{version}.tar.bz2
 Source1:		ftp://ftp.exim.org/pub/exim/exim4/%{name}-%{version}.tar.bz2.asc
 # http://www.exim.org/pub/exim/exim4/config.samples.tar.bz2
 Source2:		exim-4.43-config.samples.tar.bz2
-Source3:		ftp://ftp.exim.org/pub/exim/exim4/exim-texinfo-%{version}.tar.bz2
+Source3:		ftp://ftp.exim.org/pub/exim/exim4/exim-texinfo-4.71.tar.bz2
 Source4:		ftp://ftp.exim.org/pub/exim/exim4/FAQ-html.tar.bz2
 # http://sa-exim.sourceforge.net/
 Source5:		http://prdownloads.sourceforge.net/sa-exim/sa-exim-%{saversion}.tar.gz
@@ -78,7 +78,6 @@ Source32:		exim-4.63-sysconfig
 
 Patch0:			exim-4.69-mdv-config.patch
 Patch3:			exim-4.22-install.patch
-Patch4:			exim-4.60-system_pcre-sd3l.diff
 Patch5:			exim-4.43-dontoverridecflags.diff
 Patch7:			exim-4.69-configure.default.patch
 Patch8:			sa-exim-4.2.1-fix-str-fmt.patch
@@ -203,7 +202,6 @@ done
 
 %patch0 -p1 -b .config
 %patch3 -p1 -b .install
-%patch4 -p1 -b .pcre
 %patch5 -p0 -b .dontoverridecflags
 %patch7 -p1 -b .configure_default
 
