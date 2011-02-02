@@ -47,7 +47,7 @@
 Summary:		The exim mail transfer agent
 Name:			%{name}
 Version:		%{version}
-Release:		%mkrel 5
+Release:		%mkrel 6
 License:		GPLv2+
 Group:			System/Servers
 URL:			http://www.exim.org
@@ -105,7 +105,11 @@ BuildRequires:		pcre-devel
 BuildRequires:		perl-devel
 BuildRequires:		db-devel >= 4.2
 %if %{build_monitor}
-BuildRequires:		X11-devel
+BuildRequires:		libx11-devel
+BuildRequires:		libxaw-devel
+BuildRequires:		libxext-devel
+BuildRequires:		libxmu-devel
+BuildRequires:		libxt-devel
 %endif
 %if %{build_mysql}
 BuildRequires:		mysql-devel
@@ -301,10 +305,11 @@ cp -f %{SOURCE31} exim_tmp/exim_cron_exicyclog_eximstats
 cp -f %{SOURCE32} exim_tmp/exim_sysconfig
 
 %build
+%define _disable_ld_no_undefined 1
 %serverbuild
-make \
-	CFLAGS="$RPM_OPT_FLAGS -fPIC" \
-	RPM_OPT_FLAGS="$RPM_OPT_FLAGS -fPIC"
+make CC="gcc %ldflags" \
+	CFLAGS="%optflags -fPIC" \
+	RPM_OPT_FLAGS="%optflags -fPIC"
 
 # build SA-exim
 pushd sa-exim-%{saversion}
@@ -313,8 +318,8 @@ perl -pi -e 's|/usr/lib/exim4/local_scan|%{_libdir}/exim|g' INSTALL
 make clean
 make \
 	SACONF=%{_sysconfdir}/exim/sa-exim.conf \
-	CFLAGS="$RPM_OPT_FLAGS" \
-	LDFLAGS="-shared -fPIC"
+	CFLAGS="%optflags" \
+	LDFLAGS="-shared -fPIC %ldflags"
 popd
 
 # make docs
