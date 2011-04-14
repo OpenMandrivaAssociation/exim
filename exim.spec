@@ -47,7 +47,7 @@
 Summary:		The exim mail transfer agent
 Name:			%{name}
 Version:		%{version}
-Release:		%mkrel 7
+Release:		%mkrel 8
 License:		GPLv2+
 Group:			System/Servers
 URL:			http://www.exim.org
