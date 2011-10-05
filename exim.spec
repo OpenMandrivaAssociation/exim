@@ -2,10 +2,10 @@
 
 %if %mandriva_branch == Cooker
 # Cooker
-%define release %mkrel 1
+%define release %mkrel 2
 %else
 # Old distros
-%define subrel 1
+%define subrel 2
 %define release %mkrel 0
 %endif
 
@@ -251,36 +251,43 @@ perl -pi -e 's|^BIN_DIRECTORY=/usr/exim/bin|BIN_DIRECTORY=%{_bindir}|g' Local/Ma
 
 # the spf stuff won't build
 %if %{build_spf2}
-  perl -pi -e 's|^# EXPERIMENTAL_SPF=.*|EXPERIMENTAL_SPF=yes\nCFLAGS += -DHAVE_NS_TYPE\nLDFLAGS += -lspf2|g' Local/Makefile
+  perl -pi -e 's|^# EXPERIMENTAL_SPF=.*|EXPERIMENTAL_SPF=yes\nCFLAGS += -DHAVE_NS_TYPE\nLDFLAGS += -L%{_libdir} -lspf2|g' Local/Makefile
 %endif
 
 %if %{build_srs_alt}
-  perl -pi -e 's|^# EXPERIMENTAL_SRS=.*|EXPERIMENTAL_SRS=yes\nLDFLAGS += -lsrs_alt|g' Local/Makefile
+  perl -pi -e 's|^# EXPERIMENTAL_SRS=.*|EXPERIMENTAL_SRS=yes\nLDFLAGS += -L%{_libdir} -lsrs_alt|g' Local/Makefile
 %endif
 
 %if %{build_ldap}
 perl -pi -e 's|^# LOOKUP_LDAP=yes|LOOKUP_LDAP=yes|g' Local/Makefile
 perl -pi -e 's|^# LDAP_LIB_TYPE=OPENLDAP2|LDAP_LIB_TYPE=OPENLDAP2|' Local/Makefile
 perl -pi -e 's|^LOOKUP_INCLUDE=|LOOKUP_INCLUDE=-I%{_includedir}/ldap |' Local/Makefile
-perl -pi -e 's|^LOOKUP_LIBS=|LOOKUP_LIBS=-lldap |' Local/Makefile
+perl -pi -e 's|^LOOKUP_LIBS=|LOOKUP_LIBS=-L%{_libdir} -llber -lldap |' Local/Makefile
 %endif
 
 %if %{build_sqlite3}
 perl -pi -e 's|^# LOOKUP_SQLITE=yes|LOOKUP_SQLITE=yes|g' Local/Makefile
 perl -pi -e 's|^LOOKUP_INCLUDE=|LOOKUP_INCLUDE=-I/usr/include |g' Local/Makefile
-perl -pi -e 's|^LOOKUP_LIBS=|LOOKUP_LIBS=-lsqlite3 |g' Local/Makefile
+perl -pi -e 's|^LOOKUP_LIBS=|LOOKUP_LIBS=-L%{_libdir} -lsqlite3 |g' Local/Makefile
 %endif
 
 %if %{build_sasl2}
   perl -pi -e 's|^# CYRUS_SASLAUTHD_SOCKET=/var/run/saslauthd/mux|CYRUS_SASLAUTHD_SOCKET=/var/lib/sasl2/mux|' Local/Makefile
-  perl -pi -e 's|^# AUTH_LIBS=-lsasl2|AUTH_LIBS=-lsasl2|' Local/Makefile
+  perl -pi -e 's|^# AUTH_LIBS=-lsasl2|AUTH_LIBS=-L%{_libdir} -lsasl2|' Local/Makefile
 %endif
 
 # Remove references to Interbase (-lgds):
 perl -pi -e 's|-lgds||g' Local/Makefile
 
 # support the SMTP STARTTLS:
-perl -pi -e 's|-L/usr/openssl/lib -lssl -lcrypto|-L/usr/include/openssl -lssl -lcrypto|' Local/Makefile
+perl -pi -e 's|-L/usr/openssl/lib -lssl -lcrypto|-L%{_libdir} -lssl -lcrypto|' Local/Makefile
+
+# enable all of them
+perl -pi -e "s|^# AUTH_CYRUS_SASL=yes|AUTH_CYRUS_SASL=yes|g" Local/Makefile
+perl -pi -e "s|^# AUTH_DOVECOT=yes|AUTH_DOVECOT=yes|g" Local/Makefile
+
+# fix stray borked libdir
+perl -pi -e "s|/usr/lib\b|%{_libdir}|g" Local/Makefile
 
 # unpack some other stuff
 mkdir -p mandriva
@@ -353,9 +360,10 @@ mkdir -p %{buildroot}%{tlsdir}/{certs,private,dhparam}
 %makeinstall_std
 
 pushd build-`scripts/os-type`-`scripts/arch-type`
-    for i in convert4r3 convert4r4 exicyclog exigrep exim exim_checkaccess \
-	Exim_dbmbuild exim_dumpdb exim_fixdb exim_lock eximstats exim_tidydb \
-	exinext exipick exiqgrep exiqsumm exiwhat; do
+    for i in convert4r3 convert4r4 exicyclog exigrep \
+    exim exim_checkaccess exim_dbmbuild exim_dumpdb exim_fixdb \
+    exim_lock eximstats exim_tidydb exinext exipick exiqgrep \
+    exiqsumm exiwhat; do
 	install -m0755 $i %{buildroot}%{_bindir}/
     done
 
