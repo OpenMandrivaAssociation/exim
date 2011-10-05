@@ -1,9 +1,17 @@
-%define name		exim
-%define version		4.72
-%define saversion 	4.2.1
+%define _disable_ld_no_undefined 1
+
+%if %mandriva_branch == Cooker
+# Cooker
+%define release %mkrel 1
+%else
+# Old distros
+%define subrel 1
+%define release %mkrel 0
+%endif
+
+%define saversion 4.2.1
 
 %define tlsdir		%{_sysconfdir}/pki/tls/%{name}
-%define tlsdir_old	%{_sysconfdir}/ssl/%{name}
 
 %define build_mysql	1
 %define build_pgsql	0
@@ -45,23 +53,22 @@
 %define alternatives_install_cmd update-alternatives --install %{_sbindir}/sendmail mta %{_sbindir}/sendmail.exim %{altpriority} --slave %{_prefix}/lib/sendmail mta-in_libdir %{_sbindir}/sendmail.exim --slave %{_bindir}/mailq mta-mailq %{_bindir}/mailq.exim --slave %{_bindir}/newaliases mta-newaliases %{_bindir}/newaliases.exim --slave %{_bindir}/rmail mta-rmail %{_bindir}/rmail.exim --slave %{_sysconfdir}/aliases mta-etc_aliases %{_sysconfdir}/exim/aliases
 
 Summary:		The exim mail transfer agent
-Name:			%{name}
-Version:		%{version}
-Release:		%mkrel 8
+Name:			exim
+Version:		4.76
+Release:		%{release}
 License:		GPLv2+
 Group:			System/Servers
 URL:			http://www.exim.org
-Source0:		ftp://ftp.exim.org/pub/exim/exim4/%{name}-%{version}.tar.bz2
-Source1:		ftp://ftp.exim.org/pub/exim/exim4/%{name}-%{version}.tar.bz2.asc
+Source0:		ftp://ftp.exim.org/pub/exim/exim4/%{name}-%{version}.tar.gz
+Source1:		ftp://ftp.exim.org/pub/exim/exim4/%{name}-%{version}.tar.gz.asc
 # http://www.exim.org/pub/exim/exim4/config.samples.tar.bz2
 Source2:		exim-4.43-config.samples.tar.bz2
-Source3:		ftp://ftp.exim.org/pub/exim/exim4/exim-texinfo-4.71.tar.bz2
-Source4:		ftp://ftp.exim.org/pub/exim/exim4/FAQ-html.tar.bz2
+Source3:		ftp://ftp.exim.org/pub/exim/exim4/exim-html-%{version}.tar.gz
+Source4:		ftp://ftp.exim.org/pub/exim/exim4/exim-html-%{version}.tar.gz.asc
 # http://sa-exim.sourceforge.net/
 Source5:		http://prdownloads.sourceforge.net/sa-exim/sa-exim-%{saversion}.tar.gz
 #Source6:		eximconfig.bz2
 Source7:		exim-README.urpmi
-
 Source20:		exim.aliases
 Source21:		exim.init
 Source22:		exim.sysconfig
@@ -75,32 +82,24 @@ Source29:		exim-4.63-sasl2_smtpd.conf
 Source30:		exim-4.63-logrotate_eximstats
 Source31:		exim-4.63-cron_exicyclog_eximstats
 Source32:		exim-4.63-sysconfig
-
 Patch0:			exim-4.69-mdv-config.patch
 Patch3:			exim-4.22-install.patch
 Patch5:			exim-4.43-dontoverridecflags.diff
 Patch7:			exim-4.69-configure.default.patch
 Patch8:			sa-exim-4.2.1-fix-str-fmt.patch
-
 Requires(pre):		rpm-helper
 Requires:		perl(Net::IMAP::Simple)
 Requires:		openssl
-
 Provides:		mail-server
-Provides:		sendmail-command 
-
+Provides:		sendmail-command
 Conflicts:		postfix
 Conflicts:		sendmail
 Conflicts:		qmail
-
 BuildRequires:		tcp_wrappers-devel
 BuildRequires:		pam-devel
 BuildRequires:		openssl-devel
 BuildRequires:		lynx
 BuildRequires:		links
-BuildRequires:		texi2html
-#BuildRequires:		texinfo
-BuildRequires:		tetex
 BuildRequires:		pcre-devel
 BuildRequires:		perl-devel
 BuildRequires:		db-devel >= 4.2
@@ -133,8 +132,7 @@ Requires:		openldap >= 2.0.11
 %if %{build_sasl2}
 BuildRequires:		libsasl-devel >= 2.0
 %endif
-
-BuildRoot:		%{_tmppath}/%{name}-%{version}
+BuildRoot:		%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
 Exim is a mail transport agent (MTA) developed at the University of
@@ -164,7 +162,7 @@ You can build %{name} with some conditional build swithes;
 %package		monitor
 Summary:		X11 monitor application for exim
 Group:			Monitoring
-Requires:		%{name}
+Requires:		%{name} >= %{version}-%{release}
 
 %description		monitor
 The Exim Monitor is an optional supplement to the Exim package. It
@@ -176,7 +174,7 @@ interface.
 %package		plugins-SpamAssassin
 Summary:		Exim SpamAssassin at SMTP time plugin
 Group:			System/Servers
-Requires:		%{name}  >= %{version}-%{release}
+Requires:		%{name} >= %{version}-%{release}
 
 %description 		plugins-SpamAssassin
 Allows running SpamAssassin on incoming mail and rejection
@@ -191,8 +189,10 @@ This package includes the Exim FAQ and Exim manual in HTML.
 
 
 %prep
-%setup -q -n %{name}-%{version} -a2 -a3 -a4 -a5
-cp %{SOURCE7}		README.urpmi
+
+%setup -q -n %{name}-%{version} -a2 -a3 -a5
+
+cp %{SOURCE7} README.urpmi
 
 # fix strange attribs
 find . -type d -perm 0700 -exec chmod 755 {} \;
@@ -207,7 +207,7 @@ done
 %patch0 -p1 -b .config
 %patch3 -p1 -b .install
 %patch5 -p0 -b .dontoverridecflags
-%patch7 -p1 -b .configure_default
+%patch7 -p0 -b .configure_default
 
 # apply the SA-exim dlopen patch
 cat sa-exim-%{saversion}/localscan_dlopen_exim_4.20_or_better.patch | patch -p1
@@ -304,37 +304,31 @@ cp -f %{SOURCE30} exim_tmp/exim_logrotate_eximstats
 cp -f %{SOURCE31} exim_tmp/exim_cron_exicyclog_eximstats
 cp -f %{SOURCE32} exim_tmp/exim_sysconfig
 
+# prepare docs
+mkdir -p doc/html
+mv exim-html-%{version}/doc/html/spec_html/* doc/html/
+
 %build
-%define _disable_ld_no_undefined 1
 %serverbuild
+
 make CC="gcc %ldflags" \
-	CFLAGS="%optflags -fPIC" \
-	RPM_OPT_FLAGS="%optflags -fPIC"
+    CFLAGS="%optflags -fPIC" \
+    RPM_OPT_FLAGS="%optflags -fPIC"
 
 # build SA-exim
 pushd sa-exim-%{saversion}
 perl -pi -e 's|\@lynx|HOME=/ /usr/bin/lynx|g;' Makefile
 perl -pi -e 's|/usr/lib/exim4/local_scan|%{_libdir}/exim|g' INSTALL
 make clean
+
 make \
-	SACONF=%{_sysconfdir}/exim/sa-exim.conf \
-	CFLAGS="%optflags" \
-	LDFLAGS="-shared -fPIC %ldflags"
+    SACONF=%{_sysconfdir}/exim/sa-exim.conf \
+    CFLAGS="%optflags" \
+    LDFLAGS="-shared -fPIC %ldflags"
 popd
 
-# make docs
-mkdir -p doc/html doc/pdf doc/texinfo
-mv FAQ-html doc/html/faq
-cp exim-texinfo-*/doc/filter.texinfo doc/texinfo/
-cp exim-texinfo-*/doc/spec.texinfo doc/texinfo/
-texi2html --split=chapter -subdir=doc/html/filter doc/texinfo/filter.texinfo
-texi2html --split=chapter -subdir=doc/html/spec doc/texinfo/spec.texinfo
-#texi2pdf --clean --quiet doc/texinfo/filter.texinfo --output=doc/pdf/filter.pdf
-#texi2pdf --clean --quiet doc/texinfo/spec.texinfo --output=doc/pdf/spec.pdf
-
-
 %install
-[ -n "%{buildroot}" -a "%{buildroot}" != / ] && rm -rf %{buildroot}
+rm -rf %{buildroot}
 
 # don't fiddle with the initscript!
 export DONT_GPRINTIFY=1
@@ -359,15 +353,15 @@ mkdir -p %{buildroot}%{tlsdir}/{certs,private,dhparam}
 %makeinstall_std
 
 pushd build-`scripts/os-type`-`scripts/arch-type`
-	for i in convert4r3 convert4r4 exicyclog exigrep exim exim_checkaccess \
-		exim_dbmbuild exim_dumpdb exim_fixdb exim_lock eximstats exim_tidydb \
-		exinext exipick exiqgrep exiqsumm exiwhat; do
-		install -m0755 $i %{buildroot}%{_bindir}/
-	done
+    for i in convert4r3 convert4r4 exicyclog exigrep exim exim_checkaccess \
+	Exim_dbmbuild exim_dumpdb exim_fixdb exim_lock eximstats exim_tidydb \
+	exinext exipick exiqgrep exiqsumm exiwhat; do
+	install -m0755 $i %{buildroot}%{_bindir}/
+    done
 
 %if %{build_monitor}
-	install -m0755 eximon %{buildroot}%{_bindir}/
-	install -m0755 eximon.bin %{buildroot}%{_bindir}/
+    install -m0755 eximon %{buildroot}%{_bindir}/
+    install -m0755 eximon.bin %{buildroot}%{_bindir}/
 %endif
 
 popd
@@ -389,14 +383,14 @@ install -m0644 sa-exim-%{saversion}/*.so %{buildroot}%{_libdir}/exim/
 install -m0644 sa-exim-%{saversion}/*.conf %{buildroot}%{_sysconfdir}/exim/
 
 pushd %{buildroot}%{_libdir}/exim
-	ln -s sa-exim*.so sa-exim.so
+    ln -s sa-exim*.so sa-exim.so
 popd
 
 # install some other stuff
 pushd mandriva
-	install -m0644 exim.aliases %{buildroot}%{_sysconfdir}/exim/aliases
-	install -m0755 exim.init %{buildroot}%{_initrddir}/exim
-	install -m0644 exim.pam %{buildroot}%{_sysconfdir}/pam.d/smtp
+    install -m0644 exim.aliases %{buildroot}%{_sysconfdir}/exim/aliases
+    install -m0755 exim.init %{buildroot}%{_initrddir}/exim
+    install -m0644 exim.pam %{buildroot}%{_sysconfdir}/pam.d/smtp
 popd
 
 install -m0644 exim_tmp/exim_auth_pop3_imap.embedded_perl %{buildroot}%{_sysconfdir}/exim/exim_perl.pl
@@ -415,8 +409,8 @@ install -m0644 exim_tmp/exim_sysconfig %{buildroot}%{_sysconfdir}/sysconfig/exim
 install -m644 doc/exim.8 %{buildroot}%{_mandir}/man8/exim.8
 
 # Alias /eximstats /var/www/eximstats for Apache
-install -d %{buildroot}%{_sysconfdir}/httpd/conf.d
-cat > %{buildroot}%{_sysconfdir}/httpd/conf.d/eximstats.conf << EOF
+install -d %{buildroot}%{_sysconfdir}/httpd/conf/webapps.d
+cat > %{buildroot}%{_sysconfdir}/httpd/conf/webapps.d/eximstats.conf << EOF
 Alias /eximstats /var/www/eximstats
 <Directory /var/www/eximstats>
 	Order allow,deny
@@ -426,8 +420,8 @@ Alias /eximstats /var/www/eximstats
 EOF
 
 pod2man --center=EXIM --section=8 \
-	%{buildroot}%{_bindir}/eximstats \
-	%{buildroot}%{_mandir}/man8/eximstats.8
+    %{buildroot}%{_bindir}/eximstats \
+    %{buildroot}%{_mandir}/man8/eximstats.8
 
 %if %{build_monitor}
 # Mandriva Icons
@@ -460,7 +454,6 @@ cp doc/README README.doc
 # cleanup
 rm -f %{buildroot}%{_bindir}/exim-%{version}*
 
-
 %post
 %_post_service exim
 %{alternatives_install_cmd}
@@ -475,7 +468,7 @@ chmod 4755 %{_bindir}/exim
 # Define FQDN
 FQDN=`hostname`
 if [ "x${FQDN}" = "x" ]; then
-	FQDN="localhost.localdomain"
+    FQDN="localhost.localdomain"
 fi
 # fix primary_hostname
 perl -pi -e "s|^# primary_hostname =|primary_hostname = $FQDN|" %{_sysconfdir}/%{name}/%{name}.conf
@@ -483,29 +476,19 @@ perl -pi -e "s|^# primary_hostname =|primary_hostname = $FQDN|" %{_sysconfdir}/%
 # disable cron job if build_logrotate enabled:
 %if %{build_logrotate}
 if [ -f "/etc/cron.weekly/exim" ]; then
-	day=`date +%Y%m%d`
-	mv /etc/cron.weekly/exim /etc/exim/cron.weekly_exim.backup.$day
+    day=`date +%Y%m%d`
+    mv /etc/cron.weekly/exim /etc/exim/cron.weekly_exim.backup.$day
 fi
 %endif
-
-# change %{tlsdir_old} to %{tlsdir}
-perl -pi -e "s|%{tlsdir_old}|%{tlsdir}|g" %{_sysconfdir}/%{name}/%{name}.conf
-if [ -f %{tlsdir_old}/certs/%{name}.pem ]; then
-	echo "The OPENSSLDIR has moved to %{tlsdir}"
-	echo "Moving %{tlsdir_old} to %{tlsdir}"
-	mv %{tlsdir_old}/certs/%{name}.pem %{tlsdir}/certs/%{name}.pem
-	[ -f %{tlsdir_old}/private/%{name}.pem ] && mv %{tlsdir_old}/private/%{name}.pem %{tlsdir}/private/%{name}.pem
-	[ -f %{tlsdir_old}/dhparam/%{name}.pem ] && mv %{tlsdir_old}/dhparam/%{name}.pem %{tlsdir}/dhparam/%{name}.pem
-fi
 
 %if %{build_certs}
 # Add dummy certficates
 if [ ! -f "%{tlsdir}/certs/%{name}.pem" ]; then
-	touch %{tlsdir}/{certs,private,dhparam}/%{name}.pem
-	umask 077
-	cat << EOF | openssl req -new -x509 -days 365 -nodes \
-	-out %{tlsdir}/certs/%{name}.pem \
-	-keyout %{tlsdir}/private/%{name}.pem &>/dev/null
+    touch %{tlsdir}/{certs,private,dhparam}/%{name}.pem
+    umask 077
+    cat << EOF | openssl req -new -x509 -days 365 -nodes \
+    -out %{tlsdir}/certs/%{name}.pem \
+    -keyout %{tlsdir}/private/%{name}.pem &>/dev/null
 MandrivaLand
 MandrivaCountry
 MandrivaCity
@@ -514,9 +497,9 @@ SMTP SSL/TLS key on ${FQDN}
 ${FQDN}
 root@${FQDN}
 EOF
-	openssl dhparam -check -text -5 512 -out %{tlsdir}/dhparam/%{name}.pem &>/dev/null
-	%__chown mail.root %{tlsdir}/{private,certs,dhparam}/%{name}.pem
-	%__chmod 600 %{tlsdir}/{private,certs,dhparam}/%{name}.pem
+    openssl dhparam -check -text -5 512 -out %{tlsdir}/dhparam/%{name}.pem &>/dev/null
+    %__chown mail.root %{tlsdir}/{private,certs,dhparam}/%{name}.pem
+    %__chmod 600 %{tlsdir}/{private,certs,dhparam}/%{name}.pem
 fi
 %endif
 
@@ -527,30 +510,16 @@ fi
 %preun
 %_preun_service exim
 if [ "$1" = "0" ]; then
-update-alternatives --remove mta %{_sbindir}/sendmail.exim
+    update-alternatives --remove mta %{_sbindir}/sendmail.exim
 fi
 
 %postun
 if [ "$1" -ge "1" ]; then
-	/sbin/service exim condrestart > /dev/null 2>&1
+    /sbin/service exim condrestart > /dev/null 2>&1
 fi
 
-%if %{build_monitor}
-%if %mdkversion < 200900
-%post monitor
-%update_menus
-%endif
-
-%if %mdkversion < 200900
-%postun monitor
-%clean_menus
-%endif
-%endif
-
-
 %clean
-[ -n "%{buildroot}" -a "%{buildroot}" != / ] && rm -rf %{buildroot}
-
+rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
@@ -564,7 +533,7 @@ fi
 %attr(0644,root,mail) %config(noreplace) %{_sysconfdir}/exim/aliases
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/sysconfig/exim
 %attr(0644,root,mail) %config(noreplace) %{_sysconfdir}/exim/exim_perl.pl
-%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/conf.d/eximstats.conf
+%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/conf/webapps.d/eximstats.conf
 %if %{build_sasl2}
 %attr(0644,root,mail) %config(noreplace) %{_sysconfdir}/sasl2/smtpd.conf
 %endif
@@ -639,7 +608,4 @@ fi
 
 %files doc
 %defattr(-,root,root)
-%doc doc/html doc/texinfo config.samples README.urpmi
-#%doc doc/ps doc/pdf 
-
-
+%doc doc/html config.samples README.urpmi
