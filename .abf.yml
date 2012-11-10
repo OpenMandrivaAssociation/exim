@@ -1,0 +1,21 @@
+sources:
+  "exim-4.43-config.samples.tar.bz2:"	6cff584a724c9ac8dfa36f0db3fbaaae513ca94f
+  "exim-4.63-auth_pop3_imap.embedded_perl:"	f473be30321c7066f1c7ea741e3ee2a8b1780fe5
+  "exim-4.63-cron_exicyclog_eximstats:"	4e8a1882cc84ef661dce7ac898fdf7d8acf7228d
+  "exim-4.63-logrotate_eximstats:"	e4ffd36da028c7fa0dfc4f0f23754f0eda64a5de
+  "exim-4.63-sasl2_smtpd.conf:"	c094f207d8f4f9e62a3ded921b7dd4aa5647ba2f
+  "exim-4.63-sysconfig:"	c082519c429393de51fc9d7fdfaa63a66ea1fcbe
+  "exim-4.76.tar.gz:"	13121644a9dfd6c066f65db4ad6703a3dc432c8a
+  "exim-4.76.tar.gz.asc:"	c5663fd5d243a92783a3247e949f847e00ad5878
+  "exim.aliases:"	6b2705c7a83ecc74147b6a288038180a16a78af5
+  "exim-html-4.76.tar.gz:"	fd2ce339fc184463ce6766c5a70bb30306dcbbdb
+  "exim-html-4.76.tar.gz.asc:"	9cffddcf5c1f81fe702fbd89d2ae09569e72d3c6
+  "exim.init:"	06b8212440f3444e072be166837522e9ce30a5ed
+  "exim.logrotate:"	f7626a496253e1be616400a5807850b4f98ffa98
+  "exim_monitor-16x16.png:"	d590389d4ea5cd564034703d6936b3e4d0a6fb3b
+  "exim_monitor-32x32.png:"	d709108f487aec24a25ae15fa763274e56fa2190
+  "exim_monitor-48x48.png:"	50d8c5a37eca288e32abf1e7e33ba7fd0bf7549e
+  "exim.pam:"	b8eef6f3358791a3a56c97081eeb190df447d730
+  "exim-README.urpmi:"	f07d2c78e2d55c7860203c276f96530cb71eaa13
+  "exim.sysconfig:"	edd4acb6eefb2ff6766c944284df57935e67e2eb
+  "sa-exim-4.2.1.tar.gz:"	a0a50aa74a90f32de1f0fe960ae5df153531cd4d

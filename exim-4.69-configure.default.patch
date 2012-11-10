@@ -1,0 +1,378 @@
+--- src/configure.default	2011-05-09 10:36:25.000000000 +0200
++++ src/configure.default.oden	2011-10-05 10:34:33.779145621 +0200
+@@ -56,7 +56,7 @@
+ # +local_domains, +relay_to_domains, and +relay_from_hosts, respectively. They
+ # are all colon-separated lists:
+ 
+-domainlist local_domains = @
++domainlist local_domains = @ : @[] : localhost : localhost.localdomain : $primary_hostname
+ domainlist relay_to_domains =
+ hostlist   relay_from_hosts = 127.0.0.1
+ 
+@@ -106,7 +106,8 @@
+ # checking incoming messages. The names of these ACLs are defined here:
+ 
+ acl_smtp_rcpt = acl_check_rcpt
+-acl_smtp_data = acl_check_data
++#acl_smtp_data = acl_check_data
++#accept_8bitmime = true
+ 
+ # You should not change those settings until you understand how ACLs work.
+ 
+@@ -119,7 +120,7 @@
+ # of what to set for other virus scanners. The second modification is in the
+ # acl_check_data access control list (see below).
+ 
+-# av_scanner = clamd:/tmp/clamd
++# av_scanner = clamd:127.0.0.1 3310
+ 
+ 
+ # For spam scanning, there is a similar option that defines the interface to
+@@ -129,6 +130,8 @@
+ 
+ # spamd_address = 127.0.0.1 783
+ 
++# Enable spam scanning at SMTP time (urpmi exim-plugins-SpamAssassin):
++# local_scan_path = /usr/lib/exim/sa-exim.so
+ 
+ # If Exim is compiled with support for TLS, you may want to enable the
+ # following options so that Exim allows clients to make encrypted
+@@ -139,7 +142,6 @@
+ # as well.
+ 
+ # Allow any client to use TLS.
+-
+ # tls_advertise_hosts = *
+ 
+ # Specify the location of the Exim server's TLS certificate and private key.
+@@ -148,8 +150,16 @@
+ # need the first setting, or in separate files, in which case you need both
+ # options.
+ 
+-# tls_certificate = /etc/ssl/exim.crt
+-# tls_privatekey = /etc/ssl/exim.pem
++# You can use self-signed cerficates:
++# openssl req -x509 -newkey rsa:1024 -days 3650 -nodes \
++#		-out /etc/ssl/exim/certs/exim.pem \
++#		-ketout /etc/ssl/exim/private/exim.pem
++# And dhparam:
++# openssl dhparam -check -text -5 512 -out /etc/ssl/exim/dhparam/exim.pem
++
++#tls_certificate = /etc/ssl/exim/certs/exim.pem
++#tls_privatekey = /etc/ssl/exim/private/exim.pem
++# tls_dhparam = /etc/ssl/exim/dhparam/exim.pem
+ 
+ # In order to support roaming users who wish to send email from anywhere,
+ # you may want to make Exim listen on other ports as well as port 25, in
+@@ -211,6 +221,10 @@
+ 
+ never_users = root
+ 
++# Exim user:
++#exim_user = 8
++#exim_group = 12
++trusted_users  = nobody
+ 
+ # The setting below causes Exim to do a reverse DNS lookup on all incoming
+ # IP calls, in order to get the true host name. If you feel this is too
+@@ -485,11 +499,52 @@
+   #                      X-Spam_bar: $spam_bar\n\
+   #                      X-Spam_report: $spam_report
+ 
++  # Reject virus infested messages.
++  deny  message = This message contains malware ($malware_name)
++        malware = *
++
++  # Always add X-Spam-Score and X-Spam-Report headers, using SA system-wide settings
++  # (user "nobody"), no matter if over threshold or not.
++  warn  message = X-Spam-Score: $spam_score ($spam_bar)
++        spam = nobody:true
++  warn  message = X-Spam-Report: $spam_report
++        spam = nobody:true
++
++  # Add X-Spam-Flag if spam is over system-wide threshold
++  warn message = X-Spam-Flag: YES
++       spam = nobody
++
++  # Reject spam messages with score over 10, using an extra condition.
++  deny  message = This message scored $spam_score points. Congratulations!
++        spam = nobody:true
++        condition = ${if >{$spam_score_int}{100}{1}{0}}
++
+   # Accept the message.
+ 
+   accept
+ 
+ 
++# Customize 'received_header_text' and 'smtp_banner':
++
++FULL_HOSTINFO = $primary_hostname ${if def:interface_address \
++                        {([$interface_address]:$interface_port)} }\
++			${if !def:interface_address {([local]:$received_protocol)} }
++
++FULL_EXIMINFO = Exim-$version_number (MandrivaLinux) MTA
++
++smtp_banner = FULL_HOSTINFO ESMTP FULL_EXIMINFO $tod_full
++
++received_header_text = Received: \
++	from ${if def:sender_rcvhost {$sender_rcvhost\n\t} \
++	{${if def:sender_ident {$sender_ident } {localhost } }\
++	${if def:sender_helo_name {(helo=$sender_helo_name) } }} }\
++	by FULL_HOSTINFO\n\t\
++	${if def:received_protocol {with $received_protocol } }\
++	${if def:sender_host_authenticated \
++	{($sender_host_authenticated:$authenticated_id) } }\
++	${if def:tls_cipher {($tls_cipher)\n\t} }\
++	id $message_id - Using FULL_EXIMINFO \n\t\
++	(return-path <$sender_address>)
+ 
+ ######################################################################
+ #                      ROUTERS CONFIGURATION                         #
+@@ -511,6 +566,7 @@
+ # domain literal addresses.
+ 
+ # domain_literal:
++#   debug_print = "R: domain_literal for $local_part@$domain"
+ #   driver = ipliteral
+ #   domains = ! +local_domains
+ #   transport = remote_smtp
+@@ -530,11 +586,26 @@
+ # setting, and consequently the address is unrouteable.
+ 
+ dnslookup:
++  debug_print = "R: dnslookup for $local_part@$domain"
+   driver = dnslookup
+   domains = ! +local_domains
+   transport = remote_smtp
+-  ignore_target_hosts = 0.0.0.0 : 127.0.0.0/8
+-  no_more
++  # ignore private rfc1918 and APIPA addresses
++  ignore_target_hosts = 0.0.0.0 : 127.0.0.0/8 : 192.168.0.0/16 :\
++                        172.16.0.0/12 : 10.0.0.0/8 : 169.254.0.0/16 :\
++			255.255.255.255  no_more
++
++# Send all mail to a smarthost:
++#smarthost:
++#  debug_print = "R: smarthost for $local_part@$domain"
++#  driver = manualroute
++#  domains = !+local_domains
++#  transport = remote_smtp_smarthost
++## Replace 'my.fai.com' to your smtp fai:
++#  route_list = * my.fai.com byname
++#  host_find_failed = defer
++#  same_domain_copy_routing = yes
++#  no_more
+ 
+ 
+ # The remaining routers handle addresses in the local domain(s), that is those
+@@ -542,7 +613,7 @@
+ 
+ 
+ # This router handles aliasing using a linearly searched alias file with the
+-# name SYSTEM_ALIASES_FILE. When this configuration is installed automatically,
++# name /etc/exim/aliases. When this configuration is installed automatically,
+ # the name gets inserted into this file from whatever is set in Exim's
+ # build-time configuration. The default path is the traditional /etc/aliases.
+ # If you install this configuration by hand, you need to specify the correct
+@@ -562,11 +633,12 @@
+ # to set up different ones for pipe and file deliveries from aliases.
+ 
+ system_aliases:
++  debug_print = "R: system_aliases for $local_part@$domain"
+   driver = redirect
+   allow_fail
+   allow_defer
+-  data = ${lookup{$local_part}lsearch{SYSTEM_ALIASES_FILE}}
+-# user = exim
++  data = ${lookup{$local_part}lsearch{/etc/exim/aliases}}
++# user = mail
+   file_transport = address_file
+   pipe_transport = address_pipe
+ 
+@@ -596,6 +668,7 @@
+ # up an auto-reply, respectively.
+ 
+ userforward:
++  debug_print = "R: userforward for $local_part@$domain"
+   driver = redirect
+   check_local_user
+ # local_part_suffix = +* : -*
+@@ -609,7 +682,6 @@
+   pipe_transport = address_pipe
+   reply_transport = address_reply
+ 
+-
+ # This router matches local user mailboxes. If the router fails, the error
+ # message is "Unknown user".
+ 
+@@ -619,6 +691,7 @@
+ # in the same way as xxxx@your.domain by this router.
+ 
+ localuser:
++  debug_print = "R: localuser for $local_part@$domain"
+   driver = accept
+   check_local_user
+ # local_part_suffix = +* : -*
+@@ -644,9 +717,9 @@
+ # This transport is used for delivering messages over SMTP connections.
+ 
+ remote_smtp:
++  debug_print = "T: remote_smtp for $local_part@$domain"
+   driver = smtp
+ 
+-
+ # This transport is used for local delivery to user mailboxes in traditional
+ # BSD mailbox format. By default it will be run under the uid and gid of the
+ # local user, and requires the sticky bit to be set on the /var/mail directory.
+@@ -655,6 +728,7 @@
+ # show how this can be done.
+ 
+ local_delivery:
++  debug_print = "T: local_delivery for $local_part@$domain"
+   driver = appendfile
+   file = /var/mail/$local_part
+   delivery_date_add
+@@ -673,6 +747,7 @@
+ # section above.
+ 
+ address_pipe:
++  debug_print = "T: address_pipe for $local_part@$domain"
+   driver = pipe
+   return_output
+ 
+@@ -681,6 +756,7 @@
+ # generated by aliasing or forwarding.
+ 
+ address_file:
++  debug_print = "T: address_file for $local_part@$domain"
+   driver = appendfile
+   delivery_date_add
+   envelope_to_add
+@@ -691,9 +767,17 @@
+ # option of the userforward router.
+ 
+ address_reply:
++  debug_print = "T: address_reply for $local_part@$domain"
+   driver = autoreply
+ 
+-
++# This transport is used to deliver local mail to cyrus IMAP server via UNIX 
++# socket.
++#
++#local_delivery:
++#  driver = lmtp
++#  command = "/usr/lib/cyrus-imapd/deliver -l"
++#  batch_max = 20
++#  user = cyrus
+ 
+ ######################################################################
+ #                      RETRY CONFIGURATION                           #
+@@ -728,7 +812,11 @@
+ 
+ begin rewrite
+ 
++# This is an example of a useful rewriting rule---it looks up the real
++# address of all local users in a file
+ 
++# *@$primary_hostname ${lookup{$1}lsearch{/etc/email-addresses}\
++#						{$value}fail} bcfrF
+ 
+ ######################################################################
+ #                   AUTHENTICATION CONFIGURATION                     #
+@@ -739,13 +827,6 @@
+ # but non-standard LOGIN mechanism, with Exim acting as the server.
+ # PLAIN and LOGIN are enough to support most MUA software.
+ #
+-# These authenticators are not complete: you need to change the
+-# server_condition settings to specify how passwords are verified.
+-# They are set up to offer authentication to the client only if the
+-# connection is encrypted with TLS, so you also need to add support
+-# for TLS. See the global configuration options section at the start
+-# of this file for more about TLS.
+-#
+ # The default RCPT ACL checks for successful authentication, and will accept
+ # messages from authenticated users from anywhere on the Internet.
+ 
+@@ -759,12 +840,14 @@
+ # use $auth2 as a lookup key, and compare $auth3 against the result of the
+ # lookup, perhaps using the crypteq{}{} condition.
+ 
++## SMTP Authentication (SASL):
++#
+ #PLAIN:
+-#  driver                     = plaintext
+-#  server_set_id              = $auth2
+-#  server_prompts             = :
+-#  server_condition           = Authentication is not yet configured
+-#  server_advertise_condition = ${if def:tls_cipher }
++#  driver					 = plaintext
++#  server_set_id			= $auth2
++#  server_prompts			= :
++#  server_condition			= ${if saslauthd{{$auth2}{$auth3}{smtp}} {1}}
++#  server_advertise_condition	= ${if def:tls_cipher }
+ 
+ # LOGIN authentication has traditional prompts and responses. There is no
+ # authorization ID in this mechanism, so unlike PLAIN the username and
+@@ -772,11 +855,57 @@
+ # server_condition setting for both authenticators.
+ 
+ #LOGIN:
+-#  driver                     = plaintext
+-#  server_set_id              = $auth1
+-#  server_prompts             = <| Username: | Password:
+-#  server_condition           = Authentication is not yet configured
+-#  server_advertise_condition = ${if def:tls_cipher }
++#  driver					= plaintext
++#  server_set_id			= $auth1
++#  server_prompts			= <| Username: | Password:
++#  server_condition			= ${if saslauthd{{$auth1}{$auth2}{smtp}} {1}}
++#  server_advertise_condition	= ${if def:tls_cipher }
++
++
++## SMTP Authentication (PERL):
++# in  "MAIN CONFIGURATION SETTINGS":
++#perl_startup = do '/etc/exim/exim_perl.pl'
++#perl_at_start
++
++#auth_perl_plain:
++# driver					= plaintext
++#  server_set_id			= $auth2
++#  server_prompts			= :
++## POP3:
++#  server_condition			= ${perl{auth_perl}{localhost}{$auth2}{$auth3}{pop}}
++## IMAP:
++#  server_condition			= ${perl{auth_perl}{localhost}{$auth2}{$auth3}{imap}}
++#  server_advertise_condition 	= ${if def:tls_cipher }
++
++#auth_perl_login:
++#  driver					= plaintext
++#  server_set_id			= $auth1
++#  server_prompts			= <| Username: | Password:
++## POP3:
++#  server_condition			= ${perl{auth_perl}{localhost}{$auth1}{$auth2}{pop}}
++## IMAP:
++#  server_condition			= ${perl{auth_perl}{localhost}{$auth1}{$auth2}{imap}}
++#  server_condition			= Authentication is not yet configured
++#  server_advertise_condition	= ${if def:tls_cipher }
++
++
++## Here is an example of CRAM-MD5 authentication against SQLite:
++#
++# sqlite_auth_crammd5:
++#   driver					= cram_md5
++#   public_name			= CRAM-MD5
++#   server_secret			= ${lookup sqlite{/path/to/sqlite.db SELECT pw FROM users WHERE username = '${quote_sqlite:$auth1}'}{$value}fail}
++#   server_set_id			= $auth1
++
++## Here is an example of CRAM-MD5 authentication against MySQL:
++# in  "MAIN CONFIGURATION SETTINGS":
++# hide mysql_servers = localhost::(/var/lib/mysql/mysql.sock)/db_name/db_user/db_pass
++#
++# mysql_auth_crammd5:
++#   driver					= cram_md5
++#   public_name			= CRAM-MD5
++#   server_secret			= ${lookup mysql{ SELECT pw FROM users WHERE username = '${quote_mysql:$auth1}'}{$value}fail}
++#   server_set_id			= $auth1
+ 
+ 
+ ######################################################################

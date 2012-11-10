@@ -1,0 +1,11 @@
+--- sa-exim.c.str	2009-03-28 20:16:37.000000000 +0100
++++ sa-exim.c	2009-03-28 20:16:52.000000000 +0100
+@@ -1365,7 +1365,7 @@
+ 		 * If you do teergrube an SSL connection with the current
+ 		 * code, you will break it, but that's acceptable */
+ 		str=string_sprintf(string_sprintf("451- %s\r\n",SAmsgteergrubewait), spamstatus);
+-		fprintf(smtp_out, str);
++		fprintf(smtp_out, "%s", str);
+ 		ret=fflush(smtp_out);
+ 		if (ret != 0)
+ 		{
