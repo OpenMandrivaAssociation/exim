@@ -1,0 +1,107 @@
+* Creat TLS/SSL certificates at install time (4.63-6)
+See below.
+
+* New If enabled, Exim support authentificator using saslauthd with
+  cyrus-sasl (4.63-6)
+
+Feature disabled with exim-4.63-7mdv2007.
+All parameters are documented into /usr/share/doc/cyrus-sasl-2.*/options.html
+and /etc/sasl2/smtpd.conf .To use Exim with cyrus-sasl authentificator, in the
+authenticators section below, there are template configurations for plaintext
+username/password authentication.
+
+You can rebuild to enable/disable saslhautd option:
+rpm --rebuild --define "_with[out]_sasl2 1[0]"
+%{name}-%{version}-%{release}.src.rpm
+
+* Now Exim use logrotate (4.63-6)
+Cron job with exicyclog as disabled. If exist /etc/cron.weekly/exim as
+moved to /etc/exim/cron.weekly_exim.backup.$day
+You can rebuild to enable/disable logrotate option:
+rpm --rebuild --define "_with[out]_logrotate 1[0]"
+%{name}-%{version}-%{release}.src.rpm
+
+* New adding embledded perl script (4.63-6)
+Adding method using EXIM's embedded perl to authentificat users with
+POP3 or IMAP accompt. You have to load a perl program at start time
+and then it makes calls to a perl subroutine. The Perl routine
+attempts the IMAP or POP3 login and returns the result to Exim.
+In order to make this work you must first load in MAIN CONFIGURATION
+/etc/exim/conf:
+perl_startup = do '/etc/exim/exim_perl.pl'
+perl_at_start
+
+* New eximstats send report via mail to postmaster (4.63-6)
+You can enable/disable send report in /etc/sysconfig/exim: (enabled)
+EXIM_REPORT_WEEKLY_SEND=yes/no
+
+* New eximstats create HTML report in /var/www/eximstats/$day (4.63-6)
+You can enable/disable create HTML report in /etc/sysconfig/exim: (disabled)
+EXIM_REPORT_WEEKLY_HTML=yes/no
+
+Adding alias directorie (/eximstats /var/www/eximstats) for apache in
+/etc/httpd/conf.d/eximstats.conf (4.63-7)
+
+* New Exim support lookups in SQLite3 database (4.60-0-1.20060sd3l)
+SQLite is different to the other SQL lookups because a file name is
+required in addition to the SQL query. An SQLite database is a single
+file, and there is no daemon as in the other SQL databases.
+The interface to Exim requires the name of the file, as an absolute path,
+to be given at the start of the query. It is separated from the query
+by white space.
+This means that the path name cannot contain white space. Here is a
+lookup expansion example:
+${lookup sqlite {/path/sqlitedb SELECT name FROM aliases WHERE id='userx';}}
+
+In a list, the syntax is similar. For example:
+domainlist relay_domains = sqlite;/path/sqlitedb SELECT * FROM relays \
+WHERE ip='\${quote_sqlite:$sender_host_address}';
+
+The only character affected by the quote_sqlite operator is a single
+quote, which it doubles.
+
+You can rebuild to enable/disable sqlite3 option:
+rpm --rebuild --define "_with[out]_sqlite3 1[0]"
+%{name}-%{version}-%{release}.src.rpm
+
+* Useful commands on command line:
+"exim -bpc" : View the list of messages in the queue
+"exim -Mvb" : View for a detailed message its body
+"exim -Mvh" :View for a detailed message its headers
+"exim -d+expand -be" : DEBUG PROCESS AND MAILBOX
+"exim -bd -d -oX 25" : DEBUG FOREGROUND WITH FIXED LISTENING PORT
+"exim -bd -d -q15m" : DEBUG FOREGROUND
+"exim -bp | awk '{print $3}' | xargs exim -v -M"  : UnFreeze messages
+"exim -bp | awk '{print $3}' | xargs exim -v -Mrm" : Delete queued
+messages
+
+############# IMPORTANT ############ IMPORTANT #############
+Whenever you change Exim's configuration file, you *must* remember to
+HUP the Exim daemon, because it will not pick up the new configuration
+until you do. However, any other Exim processes that are started, for
+example, a process started by an MUA in order to send a message, will
+see the new configuration as soon as it is in place.
+You do not need to HUP the daemon for changes in auxiliary files that
+are referenced from this file. They are read every time they are used.
+It is usually a good idea to test a new configuration for syntactic
+correctness before installing it (for example, by running the command
+"exim -C /config/file.new -bV"
+
+* TLS/SSL:
+You can create TLS/SSL certificates:
+openssl req -x509 -newkey rsa:1024 \
+   -keyout /etc/pki/tls/private/exim.pem \
+   -out /etc/pki/tls/certs/exim.pem \
+   -days 365 -nodes
+
+openssl dhparam -check -text -5 512 \
+   -out /etc/pki/tls/dhparam/exim.pem
+
+tls_certificate = /etc/pki/tls/certs/exim.pem
+tls_privatekey = /etc/pki/tls/private/exim.pem
+tls_dhparam = /etc/pki/tls/dhparam/exim.pem
+tls_advertise_hosts = *
+
+daemon_smtp_ports = 25 : 465 : 587
+tls_on_connect_ports = 465
+#auth_advertise_hosts = ${if eq{$tls_cipher}{}{}{*}}

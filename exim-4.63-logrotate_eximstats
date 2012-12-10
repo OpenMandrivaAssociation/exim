@@ -1,0 +1,74 @@
+# /etc/sysconfig/exim
+#
+# EXIM_REPORT_WEEKLY_SEND = yes/no
+# EXIM_REPORT_WEEKLY_HTML = yes/no
+#
+/var/log/exim/main.log {
+	compress
+	dateext
+	notifempty
+	missingok
+	create 640 mail mail
+	#rotate 99
+	weekly
+	#maxage 120
+	prerotate
+		cd /var/log/exim
+		if [ -f /etc/sysconfig/exim ]; then
+			source /etc/sysconfig/exim
+		fi
+		if [ "$EXIM_REPORT_WEEKLY_SEND" = yes ] || [ "$EXIM_REPORT_WEEKLY_HTML" = yes ]; then
+			day=`date +%Y%m%d`
+			report=weekly_report-$day.log
+			eximstatsdir=/var/www/eximstats/$day
+			eximstats main.log > $report
+			chmod 640 $report
+			chown mail:mail $report
+			# create HTML report ?
+			if [ "$EXIM_REPORT_WEEKLY_HTML" = yes ]; then
+				mkdir -p $eximstatsdir
+				eximstats -html -charts -chartdir $eximstatsdir main.log > $eximstatsdir/index.html
+			fi
+			# send $report via mail to postmaster ?
+			if [ "$EXIM_REPORT_WEEKLY_SEND" = yes ]; then
+				mail -s "$(sed -n '2{p;q;}' < $report) ($(hostname))" postmaster < $report
+			fi
+		fi
+	endscript
+}
+
+/var/log/exim/weekly_report-*.log {
+	compress
+	#dateext
+	notifempty
+	missingok
+	weekly
+	#rotate 99
+	#size 2M
+	#maxage 120
+}
+
+/var/log/exim/reject.log {
+	compress
+	dateext
+	notifempty
+	missingok
+	weekly
+	create 640 mail mail
+	#rotate 99
+	#size 4M
+	#maxage 120
+}
+
+/var/log/exim/panic.log {
+	compress
+	dateext
+	notifempty
+	missingok
+	weekly
+	create 640 mail mail
+	#rotate 99
+	#size 1M
+	#maxage 120
+}
+

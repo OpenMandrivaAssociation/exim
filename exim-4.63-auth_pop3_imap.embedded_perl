@@ -1,0 +1,30 @@
+#!/usr/bin/perl
+# Exim's embedded perl for Mandriva Linux
+# In "MAIN CONFIGURATION SETTINGS" load the Perl script as follows:
+#	perl_startup = do '/etc/exim/exim_perl.pl'
+#	perl_at_start
+
+# The Perl routine "auth_perl" attempts the IMAP/POP3  login
+# and returns the result to Exim.
+sub auth_perl {
+   my $host = shift;
+   my $user = shift;
+   my $password = shift;
+   my $auth_type = shift;
+   # Ouverture de connection sur le serveur IMAP ou POP3:
+   if ($auth_type eq "imap") {
+      use Net::IMAP::Simple;
+      if (! ($server = new Net::IMAP::Simple($host))) {return 1;}
+   } else {
+      use Net::POP3;
+      if (! ($server = new Net::POP3($host))) {return 1;}
+   }
+   # login, si ok renvoie 1 (true) ou 0 (false)
+   if ($server->login( $user, $password )) {
+      return 1;
+   } else {
+      return 0;
+   }
+   $server->close();
+}
+

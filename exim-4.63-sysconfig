@@ -1,0 +1,15 @@
+# Command line arguments to hand over to exim
+#
+## Default:     "yes"
+DAEMON=yes
+
+## Default:     "30m"
+QUEUE=30m
+
+## Default:     "no"
+# Create HTML reports  in /var/www/eximstats?
+EXIM_REPORT_WEEKLY_HTML=no
+
+## Default:     "no"
+# Send the reports  via mail to postmaster?
+EXIM_REPORT_WEEKLY_SEND=yes
