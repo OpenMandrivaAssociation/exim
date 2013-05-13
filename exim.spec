@@ -104,11 +104,11 @@ BuildRequires:		pcre-devel
 BuildRequires:		perl-devel
 BuildRequires:		db-devel >= 4.2
 %if %{build_monitor}
-BuildRequires:		libx11-devel
-BuildRequires:		libxaw-devel
-BuildRequires:		libxext-devel
-BuildRequires:		libxmu-devel
-BuildRequires:		libxt-devel
+BuildRequires:		pkgconfig(x11)
+BuildRequires:		pkgconfig(xaw7)
+BuildRequires:		pkgconfig(xext)
+BuildRequires:		pkgconfig(xmu)
+BuildRequires:		pkgconfig(xt)
 %endif
 %if %{build_mysql}
 BuildRequires:		mysql-devel
@@ -130,7 +130,7 @@ BuildRequires:		openldap-devel >= 2.0.11
 Requires:		openldap >= 2.0.11
 %endif
 %if %{build_sasl2}
-BuildRequires:		libsasl-devel >= 2.0
+BuildRequires:		sasl-devel = 2.1.25 >= 2.0
 %endif
 BuildRoot:		%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
