@@ -2,11 +2,11 @@
 
 %if %mandriva_branch == Cooker
 # Cooker
-%define release %mkrel 3
+%define release  4
 %else
 # Old distros
 %define subrel 2
-%define release %mkrel 0
+%define release  1
 %endif
 
 %define saversion 4.2.1
@@ -132,7 +132,6 @@ Requires:		openldap >= 2.0.11
 %if %{build_sasl2}
 BuildRequires:		sasl-devel = 2.1.25 >= 2.0
 %endif
-BuildRoot:		%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
 Exim is a mail transport agent (MTA) developed at the University of
