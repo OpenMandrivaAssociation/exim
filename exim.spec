@@ -721,7 +721,7 @@ rm -rf %{buildroot}
 - New license policy
 - remove quotes characters in menu item
 
-* Fri Sep 07 2007 StÃ©phane TÃ©letchÃ©a <steletch@mandriva.org> 4.63-11mdv2008.0
+* Fri Sep 07 2007 Stéphane Téletchéa <steletch@mandriva.org> 4.63-11mdv2008.0
 + Revision: 81764
 - Add requires perl-Net-IMAP-Simple (fixes #33281)
 
@@ -740,7 +740,7 @@ rm -rf %{buildroot}
 - make it build against latest openssl (P8)
 - rebuild
 
-* Tue Nov 07 2006 StÃ©phane TÃ©letchÃ©a <steletch@mandriva.org> 4.63-7mdv2007.0
+* Tue Nov 07 2006 Stéphane Téletchéa <steletch@mandriva.org> 4.63-7mdv2007.0
 + Revision: 77423
 - Import exim
 
