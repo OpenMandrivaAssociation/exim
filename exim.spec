@@ -90,6 +90,7 @@ Patch8:			sa-exim-4.2.1-fix-str-fmt.patch
 Requires(pre):		rpm-helper
 Requires:		perl(Net::IMAP::Simple)
 Requires:		openssl
+Requires:		apache-mod_socache_shmcb
 Provides:		mail-server
 Provides:		sendmail-command
 Conflicts:		postfix
@@ -420,8 +421,7 @@ install -d %{buildroot}%{_sysconfdir}/httpd/conf/webapps.d
 cat > %{buildroot}%{_sysconfdir}/httpd/conf/webapps.d/eximstats.conf << EOF
 Alias /eximstats /var/www/eximstats
 <Directory /var/www/eximstats>
-	Order allow,deny
-	Allow from all
+	Require all granted
 	Options +Indexes
 </Directory>
 EOF
@@ -629,7 +629,7 @@ rm -rf %{buildroot}
 - 4.76 (fixes CVE-2011-1764)
 - rework the spec file a bit
 
-  + Per Ã˜yvind Karlsen <peroyvind@mandriva.org>
+  + Per ÃƒÂ˜yvind Karlsen <peroyvind@mandriva.org>
     - rebuild against db 5.1.25
 
 * Thu Mar 17 2011 Oden Eriksson <oeriksson@mandriva.com> 4.72-7
@@ -744,7 +744,7 @@ rm -rf %{buildroot}
 + Revision: 77423
 - Import exim
 
-* Mon Oct 30 2006 Stéphane Téletchéa <steletch@mandriva.org> 4.63-7mdv2007.1
+* Mon Oct 30 2006 StÃ©phane TÃ©letchÃ©a <steletch@mandriva.org> 4.63-7mdv2007.1
 - Drop certificate generation
 - From Serge Demonchaux:
 	- the OPENSSLDIR has moved to /etc/pki/tls (openssl0.9.8-0.9.8b-2.2mdv2007.0)
@@ -763,7 +763,7 @@ rm -rf %{buildroot}
 	- add README.urpmi
 	- fix buildrequires for pre 2007.0
 
-* Thu Sep 28 2006 Stéphane Téletchéa <steletch@mandriva.org> 4.63-6mdv2007.0
+* Thu Sep 28 2006 StÃ©phane TÃ©letchÃ©a <steletch@mandriva.org> 4.63-6mdv2007.0
 - From Serge Demonchaux:
 - /etc/exim/exim.conf:
 	- add exim's embedded perl script at start
@@ -780,11 +780,11 @@ rm -rf %{buildroot}
 	- add new entry in /etc/sysconfig/exim
 	- update alternatives_install_cmd to use mta-pam for sasl2 in alternatives
 
-* Mon Sep 25 2006 Stéphane Téletchéa <steletch@mandriva.org> 4.63-5mdv2007.0
+* Mon Sep 25 2006 StÃ©phane TÃ©letchÃ©a <steletch@mandriva.org> 4.63-5mdv2007.0
 - fix SYSTEM_ALIASES_FILE macro
 - translate some comments
 
-* Fri Sep 15 2006 Stéphane Téletchéa <steletch@mandriva.org> 4.63-4mdv2007.0
+* Fri Sep 15 2006 StÃ©phane TÃ©letchÃ©a <steletch@mandriva.org> 4.63-4mdv2007.0
 - update spec file
 - fix xdg menus for exim-monitor
 - drop Corporate Server 2.1 since it is no more supported as of feb 28th 2006
