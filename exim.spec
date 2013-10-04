@@ -131,7 +131,7 @@ BuildRequires:		openldap-devel >= 2.0.11
 Requires:		openldap >= 2.0.11
 %endif
 %if %{build_sasl2}
-BuildRequires:		sasl-devel = 2.1.25 >= 2.0
+BuildRequires:		sasl-devel >= 2.1.25
 %endif
 
 %description
