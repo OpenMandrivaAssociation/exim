@@ -2,11 +2,11 @@
 
 %if %mandriva_branch == Cooker
 # Cooker
-%define release  5
+%define release  6
 %else
 # Old distros
 %define subrel 2
-%define release  1
+%define release  2
 %endif
 
 %define saversion 4.2.1
