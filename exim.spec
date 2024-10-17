@@ -58,7 +58,7 @@ Version:		4.76
 Release:		%{release}
 License:		GPLv2+
 Group:			System/Servers
-URL:			http://www.exim.org
+URL:			https://www.exim.org
 Source0:		ftp://ftp.exim.org/pub/exim/exim4/%{name}-%{version}.tar.gz
 Source1:		ftp://ftp.exim.org/pub/exim/exim4/%{name}-%{version}.tar.gz.asc
 # http://www.exim.org/pub/exim/exim4/config.samples.tar.bz2
