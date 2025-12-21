@@ -96,6 +96,7 @@ Provides:		sendmail-command
 Conflicts:		postfix
 Conflicts:		sendmail
 Conflicts:		qmail
+BuildRequires:	make
 BuildRequires:		tcp_wrappers-devel
 BuildRequires:		pam-devel
 BuildRequires:		openssl-devel
